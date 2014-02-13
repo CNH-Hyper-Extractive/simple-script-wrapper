@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LinkableComponent Type="KansasState.Ssw.SimpleScriptWrapper.LinkableEngine" Assembly="..\Assemblies\KansasState.Ssw.SimpleScriptWrapper.dll">
+  <Arguments>
+    <Argument Key="ConfigFile" ReadOnly="true" Value=".\Component.xml" />
+    <Argument Key="ScriptPath" ReadOnly="true" Value=".\" />
+  </Arguments>
+</LinkableComponent>

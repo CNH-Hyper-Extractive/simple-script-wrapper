@@ -1,0 +1,130 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{4084D415-0CCA-4836-BDE1-0376767659D5}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>KansasState.Ssw.AdapterApp</RootNamespace>
+    <AssemblyName>KansasState.Ssw.AdapterApp</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="IronPython.Modules">
+      <HintPath>..\PythonCore\IronPython\IronPython.Modules.dll</HintPath>
+    </Reference>
+    <Reference Include="Oatc.OpenMI.Sdk.Backbone">
+      <HintPath>..\Assemblies\Oatc.OpenMI.Sdk.Backbone.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenMI.Standard">
+      <HintPath>..\Assemblies\OpenMI.Standard.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="HomeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HomeForm.Designer.cs">
+      <DependentUpon>HomeForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="HomeForm.resx">
+      <DependentUpon>HomeForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="app.config" />
+    <None Include="Data\Scilab Scripts\sswFinish.sce" />
+    <None Include="Data\Scilab Scripts\sswInitialize.sce" />
+    <None Include="Data\Scilab Scripts\sswPerformTimeStep.sce" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FileElementSet\FileElementSet.csproj">
+      <Project>{4D73B8F9-E543-46B9-9C93-13E2A8D95E28}</Project>
+      <Name>FileElementSet</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\InterfaceCore\InterfaceCore.csproj">
+      <Project>{00C8B3EB-4903-460A-A817-6510C41BFB5E}</Project>
+      <Name>InterfaceCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MatlabCore\MatlabCore.csproj">
+      <Project>{9D7E4551-9AE0-40B6-A843-FC959AEE3F60}</Project>
+      <Name>MatlabCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PythonCore\PythonCore.csproj">
+      <Project>{88835A4E-D6E9-4B57-B153-E076F62FDFAE}</Project>
+      <Name>PythonCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ScilabCore\ScilabCore.csproj">
+      <Project>{C3F0C7DC-82AD-405B-990A-BF2C5B7F46FF}</Project>
+      <Name>ScilabCore</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Data\ElementSets.xml" />
+    <Content Include="Data\Matlab Scripts\sswFinish.m" />
+    <Content Include="Data\Matlab Scripts\sswInitialize.m" />
+    <Content Include="Data\Matlab Scripts\sswPerformTimeStep.m" />
+    <Content Include="Data\Python Scripts\Model.py" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{B2B76A23-9FF2-42B8-BDCC-14FA17958FD4}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>KansasState.Ssw.SimpleScriptWrapper</RootNamespace>
+    <AssemblyName>KansasState.Ssw.SimpleScriptWrapper</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="IronPython.Modules">
+      <HintPath>..\PythonCore\IronPython\IronPython.Modules.dll</HintPath>
+    </Reference>
+    <Reference Include="Oatc.OpenMI.Sdk.Backbone">
+      <HintPath>..\Assemblies\Oatc.OpenMI.Sdk.Backbone.dll</HintPath>
+    </Reference>
+    <Reference Include="Oatc.OpenMI.Sdk.Buffer">
+      <HintPath>..\Assemblies\Oatc.OpenMI.Sdk.Buffer.dll</HintPath>
+    </Reference>
+    <Reference Include="Oatc.OpenMI.Sdk.DevelopmentSupport">
+      <HintPath>..\Assemblies\Oatc.OpenMI.Sdk.DevelopmentSupport.dll</HintPath>
+    </Reference>
+    <Reference Include="Oatc.OpenMI.Sdk.Wrapper">
+      <HintPath>..\Assemblies\Oatc.OpenMI.Sdk.Wrapper.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenMI.Standard">
+      <HintPath>..\Assemblies\OpenMI.Standard.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Engine.cs" />
+    <Compile Include="LinkableEngine.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Extras\Extras.csproj">
+      <Project>{F77F6F0E-CE46-4FF4-829F-99CD67C8CF82}</Project>
+      <Name>Extras</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FileElementSet\FileElementSet.csproj">
+      <Project>{4D73B8F9-E543-46B9-9C93-13E2A8D95E28}</Project>
+      <Name>FileElementSet</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\InterfaceCore\InterfaceCore.csproj">
+      <Project>{00C8B3EB-4903-460A-A817-6510C41BFB5E}</Project>
+      <Name>InterfaceCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MatlabCore\MatlabCore.csproj">
+      <Project>{9D7E4551-9AE0-40B6-A843-FC959AEE3F60}</Project>
+      <Name>MatlabCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PythonCore\PythonCore.csproj">
+      <Project>{88835A4E-D6E9-4B57-B153-E076F62FDFAE}</Project>
+      <Name>PythonCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ScilabCore\ScilabCore.csproj">
+      <Project>{C3F0C7DC-82AD-405B-990A-BF2C5B7F46FF}</Project>
+      <Name>ScilabCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SimpleModelWrapper\SimpleModelWrapper.csproj">
+      <Project>{96C23728-CA20-47F8-A85C-AE76A31085FB}</Project>
+      <Name>SimpleModelWrapper</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <PropertyGroup>
+    <PostBuildEvent>COPY "$(TargetDir)*.dll" "$(SolutionDir)..\..\LinkedModel\CropChoice\Assemblies\"
+COPY "$(TargetDir)*.dll" "$(SolutionDir)..\..\LinkedModel\GroundwaterMB\Assemblies\"
+COPY "$(TargetDir)*.dll" "$(SolutionDir)..\Sample\Assemblies\"
+</PostBuildEvent>
+  </PropertyGroup>
+</Project>

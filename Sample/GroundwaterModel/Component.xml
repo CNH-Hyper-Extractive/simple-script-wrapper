@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<Configuration>
+
+  <ModelInfo>
+    <ID>Groundwater</ID>
+    <Description>Groundwater model based on simple mass balance equation</Description>
+    <ScriptingLanguage>Scilab</ScriptingLanguage>
+  </ModelInfo>
+
+  <TimeHorizon>
+    <StartDateTime>01/01/2010 00:00:00</StartDateTime>
+    <EndDateTime>01/01/2040 00:00:00</EndDateTime>
+    <TimeStep>1</TimeStep>
+    <TimeStepUnit>year</TimeStepUnit>
+    <InputTimeOffset>1</InputTimeOffset>
+  </TimeHorizon>
+
+  <ExchangeItems>
+
+    <InputExchangeItem>
+      <ElementSet>
+        <ID>Counties</ID>
+        <XmlFilePath>ElementSets.xml</XmlFilePath>
+      </ElementSet>
+      <Quantity>
+        <ID>Pumping</ID>
+        <Description>Daily pumping rate in cubic meters</Description>
+        <Dimensions>
+          <Dimension>
+            <Base>Length</Base>
+            <Power>1</Power>
+          </Dimension>
+          <Dimension>
+            <Base>Time</Base>
+            <Power>-1</Power>
+          </Dimension>
+        </Dimensions>
+        <Unit>
+          <ID>m^3/day</ID>
+          <Description>Cubic meters per day</Description>
+          <ConversionFactorToSI>1</ConversionFactorToSI>
+          <OffSetToSI>0</OffSetToSI>
+        </Unit>
+        <ValueType>Scalar</ValueType>
+      </Quantity>
+    </InputExchangeItem>
+
+    <OutputExchangeItem>
+      <ElementSet>
+        <ID>Counties</ID>
+        <XmlFilePath>ElementSets.xml</XmlFilePath>
+      </ElementSet>
+      <Quantity>
+        <ID>Storage</ID>
+        <Description>Total groundwater storage in m^3</Description>
+        <Dimensions>
+          <Dimension>
+            <Base>Length</Base>
+            <Power>3</Power>
+          </Dimension>
+          <Dimension>
+            <Base>Time</Base>
+            <Power>-1</Power>
+          </Dimension>
+        </Dimensions>
+        <Unit>
+          <ID>m^3</ID>
+          <Description>Total cubic meters</Description>
+          <ConversionFactorToSI>1</ConversionFactorToSI>
+          <OffSetToSI>0</OffSetToSI>
+        </Unit>
+        <ValueType>Scalar</ValueType>
+      </Quantity>
+    </OutputExchangeItem>
+
+  </ExchangeItems>
+
+</Configuration>

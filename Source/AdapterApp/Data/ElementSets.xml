@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ElementSets>
+    <ElementSet>
+        <ID>Sample_Output_Element_Set</ID>
+        <Description>This is a Sample Output</Description>
+        <Version>1</Version>
+        <Kind>Point</Kind>
+        <Elements>
+            <Element>
+                <ID>9001</ID>
+                <X>0</X>
+                <Y>0</Y>
+            </Element>
+            <Element>
+                <ID>9002</ID>
+                <X>0</X>
+                <Y>0</Y>
+            </Element>
+            <Element>
+                <ID>9003</ID>
+                <X>0</X>
+                <Y>0</Y>
+            </Element>
+        </Elements>
+    </ElementSet>
+</ElementSets>

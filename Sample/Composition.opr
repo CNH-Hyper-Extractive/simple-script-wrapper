@@ -1,0 +1,20 @@
+<guiComposition version="1.0">
+  <models>
+    <model omi="AgricultureModel\Component.omi" rect_x="27" rect_y="129" rect_width="100" rect_height="51" />
+    <model omi="GroundwaterModel\Component.omi" rect_x="197" rect_y="131" rect_width="100" rect_height="51" />
+    <model omi="WeatherModel\Component.omi" rect_x="26" rect_y="23" rect_width="100" rect_height="51" />
+    <model omi="Oatc.OpenMI.Gui.Trigger" rect_x="197" rect_y="21" rect_width="100" rect_height="51" />
+  </models>
+  <links>
+    <uilink model_providing="Weather" model_accepting="Agriculture">
+      <link id="2" source_elementset="Counties" source_quantity="Precipitation" target_elementset="Counties" target_quantity="Precipitation" />
+    </uilink>
+    <uilink model_providing="Agriculture" model_accepting="Groundwater">
+      <link id="4" source_elementset="Counties" source_quantity="Pumping" target_elementset="Counties" target_quantity="Pumping" />
+    </uilink>
+    <uilink model_providing="Groundwater" model_accepting="Oatc.OpenMI.Gui.Trigger">
+      <link id="8" source_elementset="Counties" source_quantity="Storage" target_elementset="TriggerElementID" target_quantity="TriggerQuantityID" />
+    </uilink>
+  </links>
+  <runproperties listenedeventtypes="11111111111" triggerinvoke="01/01/2040 00:00:00" runinsamethread="1" showeventsinlistbox="1" logfilename="CompositionRun.log" />
+</guiComposition>

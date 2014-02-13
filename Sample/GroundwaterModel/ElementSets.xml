@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ElementSets>
+    <ElementSet>
+        <ID>Counties</ID>
+        <Description>Four counties represented as 2D points</Description>
+        <Version>1</Version>
+        <Kind>Point</Kind>
+        <Elements>
+          <Element>
+            <ID>County #1</ID>
+            <X>0</X>
+            <Y>0</Y>
+          </Element>
+          <Element>
+            <ID>County #2</ID>
+            <X>0</X>
+            <Y>1</Y>
+          </Element>
+          <Element>
+            <ID>County #3</ID>
+            <X>1</X>
+            <Y>0</Y>
+          </Element>
+          <Element>
+            <ID>County #4</ID>
+            <X>1</X>
+            <Y>1</Y>
+          </Element>
+        </Elements>
+    </ElementSet>
+</ElementSets>

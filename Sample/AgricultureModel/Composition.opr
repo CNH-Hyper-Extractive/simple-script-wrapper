@@ -1,0 +1,12 @@
+<guiComposition version="1.0">
+  <models>
+    <model omi="Component.omi" rect_x="37" rect_y="89" rect_width="100" rect_height="51" />
+    <model omi="Oatc.OpenMI.Gui.Trigger" rect_x="226" rect_y="91" rect_width="100" rect_height="51" />
+  </models>
+  <links>
+    <uilink model_providing="Agriculture" model_accepting="Oatc.OpenMI.Gui.Trigger">
+      <link id="2" source_elementset="Counties" source_quantity="Pumping" target_elementset="TriggerElementID" target_quantity="TriggerQuantityID" />
+    </uilink>
+  </links>
+  <runproperties listenedeventtypes="11111111111" triggerinvoke="01/01/2041 00:00:00" runinsamethread="1" showeventsinlistbox="1" logfilename="CompositionRun.log" />
+</guiComposition>
