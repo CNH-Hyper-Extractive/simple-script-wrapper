@@ -1,41 +1,39 @@
-﻿//
-// Copyright (c) 2012 Tom Bulatewicz, Kansas State University
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-//
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.IO;
+﻿//  -----------------------------------------------------------------------
+//   Copyright (c) 2014 Tom Bulatewicz, Kansas State University
+//   
+//   Permission is hereby granted, free of charge, to any person obtaining a copy
+//   of this software and associated documentation files (the "Software"), to deal
+//   in the Software without restriction, including without limitation the rights
+//   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//   copies of the Software, and to permit persons to whom the Software is
+//   furnished to do so, subject to the following conditions:
+//   
+//   The above copyright notice and this permission notice shall be included in all
+//   copies or substantial portions of the Software.
+//   
+//   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//   SOFTWARE.
+//  -----------------------------------------------------------------------
+
 using System.Collections;
-using Oatc.OpenMI.Sdk.Backbone;
-using Sc.Smw;
+using System.IO;
+using KansasState.Ssw.Extras;
 using KansasState.Ssw.InterfaceCore;
 using KansasState.Ssw.MatlabCore;
-using KansasState.Ssw.ScilabCore;
 using KansasState.Ssw.PythonCore;
-using KansasState.Ssw.FileElementSet;
-using KansasState.Ssw.Extras;
+using KansasState.Ssw.ScilabCore;
+using Oatc.OpenMI.Sdk.Backbone;
+using Oatc.OpenMI.Sdk.DevelopmentSupport;
+using Sc.Smw;
 
 namespace KansasState.Ssw.SimpleScriptWrapper
 {
-    public class Engine : Sc.Smw.Wrapper
+    public class Engine : Wrapper
     {
         private ILanguageAdapter _adapter;
 
@@ -45,38 +43,46 @@ namespace KansasState.Ssw.SimpleScriptWrapper
         }
 
         /// <summary>
-        /// This method is used to perform actions prior to model simulation
+        ///     This method is used to perform actions prior to model simulation
         /// </summary>
-        public override void Initialize(System.Collections.Hashtable properties)
+        public override void Initialize(Hashtable properties)
         {
             // get config file path defined in the omi file
-            string configFile = (string)properties["ConfigFile"];
+            var configFile = (string)properties["ConfigFile"];
 
             // set various variables from the config file
-            this.SetVariablesFromConfigFile(configFile);
+            SetVariablesFromConfigFile(configFile);
 
             // assumes that there is only one component in this folder (could add GetModelID
             // to make it unique)
-            _logFile = new LogFile(Path.Combine(Directory.GetCurrentDirectory(),"Log.txt"));
+            _logFile = new LogFile(Path.Combine(Directory.GetCurrentDirectory(), "Log.txt"));
 
-            for (int i = 0; i < GetInputExchangeItemCount(); i++)
-                {
-                    InputExchangeItem item = GetInputExchangeItem(i);
-                    _logFile.Append("Input Item: " + item.Quantity.ID + " has " + item.ElementSet.ElementCount + " elements");
-                }
+            for (var i = 0; i < GetInputExchangeItemCount(); i++)
+            {
+                var item = GetInputExchangeItem(i);
+                _logFile.Append("Input Item: " + item.Quantity.ID + " has " + item.ElementSet.ElementCount + " elements");
+            }
 
             // get the name of the folder where the scripts are located (relative path)
             string scriptPath;
             if (properties["ScriptPath"] != null)
+            {
                 scriptPath = Path.Combine(Directory.GetCurrentDirectory(), (string)properties["ScriptPath"]);
+            }
             else
+            {
                 scriptPath = Directory.GetCurrentDirectory();
+            }
 
             // make sure the script path ends with a slash
             scriptPath = Utils.AddTrailingSeparatorIfNecessary(scriptPath);
+            _logFile.Append("ScriptPath: " + scriptPath);
 
             // get the name of the folder where the runtime dll's are located
-            string installationFolder = (string)properties["InstallationFolder"];
+            var installationFolder = (string)properties["InstallationPath"];
+            _logFile.Append("InstallationPath: " + installationFolder);
+
+            _logFile.Append("Creating adapter..");
 
             // instantiate the appropriate interpreter adapter
             switch (_adapterName.ToLower())
@@ -93,59 +99,61 @@ namespace KansasState.Ssw.SimpleScriptWrapper
             }
 
             // initialize a data structure to hold results
-            this.SetValuesTableFields();
+            SetValuesTableFields();
 
             // start the adapter
-            DateTime startTime = Utils.ITimeToDateTime(this.GetTimeHorizon().Start);
-            _adapter.Start(Inputs, Outputs, startTime, this.GetTimeStepLength());
+            var startTime = Utils.ITimeToDateTime(GetTimeHorizon().Start);
+            _adapter.Start(Inputs, Outputs, startTime, GetTimeStepLength());
 
             // update the output exchange item values in this component to
             // reflect the current (start) time of the script.
-            int outputCount = GetOutputExchangeItemCount();
+            var outputCount = GetOutputExchangeItemCount();
             if (outputCount > 0)
             {
                 // for each output
-                for (int i = 0; i < outputCount; i++)
+                for (var i = 0; i < outputCount; i++)
                 {
                     // get the next item
-                    OutputExchangeItem item = GetOutputExchangeItem(i);
+                    var item = GetOutputExchangeItem(i);
 
                     // extract the values from the adapter
-                    double[] data = _adapter.GetValues(item);
+                    var data = _adapter.GetValues(item);
 
                     _logFile.Append("Adapter.GetValues [" + item.Quantity.ID + "]:", data, true);
 
                     // store the values
-                    this.SetValues(item.Quantity.ID, item.ElementSet.ID, new ScalarSet(data));
+                    SetValues(item.Quantity.ID, item.ElementSet.ID, new ScalarSet(data));
                 }
             }
 
-            DateTime currentDT = Oatc.OpenMI.Sdk.DevelopmentSupport.CalendarConverter.ModifiedJulian2Gregorian(((TimeStamp)this.GetCurrentTime()).ModifiedJulianDay);
-            _logFile.Append("Time: " + currentDT);
+            var currentDt = CalendarConverter.ModifiedJulian2Gregorian(((TimeStamp)GetCurrentTime()).ModifiedJulianDay);
+            _logFile.Append("Time: " + currentDt);
+
+            _logFile.Append("Initialization complete");
         }
 
         public override bool PerformTimeStep()
         {
             _logFile.Append("PerformTimeStep()");
 
-            DateTime currentDT = Oatc.OpenMI.Sdk.DevelopmentSupport.CalendarConverter.ModifiedJulian2Gregorian(((TimeStamp)this.GetCurrentTime()).ModifiedJulianDay);
-            _logFile.Append("Time: " + currentDT);
+            var currentDt = CalendarConverter.ModifiedJulian2Gregorian(((TimeStamp)GetCurrentTime()).ModifiedJulianDay);
+            _logFile.Append("Time: " + currentDt);
 
             // get any input values from other components and pass them into
             // the interpreter adapter
-            int inputCount = GetInputExchangeItemCount();
+            var inputCount = GetInputExchangeItemCount();
             if (inputCount > 0)
             {
                 // for each input
-                for (int i = 0; i < inputCount; i++)
+                for (var i = 0; i < inputCount; i++)
                 {
                     // get the next item
-                    InputExchangeItem item = GetInputExchangeItem(i);
+                    var item = GetInputExchangeItem(i);
 
                     // get the values that have already been retrieved from
                     // the other component
-                    ScalarSet values = (ScalarSet)GetValues(item.Quantity.ID, item.ElementSet.ID);
-                    double[] data = values.data;
+                    var values = (ScalarSet)GetValues(item.Quantity.ID, item.ElementSet.ID);
+                    var data = values.data;
 
                     _logFile.Append("Adapter.SetValues [" + item.Quantity.ID + "]:", data, true);
 
@@ -155,35 +163,35 @@ namespace KansasState.Ssw.SimpleScriptWrapper
             }
 
             // tell the interpreter adapter to perform a time step
-            DateTime currentTime = Utils.ITimeToDateTime(this.GetCurrentTime());
+            var currentTime = Utils.ITimeToDateTime(GetCurrentTime());
             _adapter.PerformTimeStep(currentTime);
- 
+
             // extract the outputs from the interpreter adapter for each
             // output exchange item
-            int outputCount = GetOutputExchangeItemCount();
+            var outputCount = GetOutputExchangeItemCount();
             if (outputCount > 0)
             {
                 // for each output
-                for (int i = 0; i < outputCount; i++)
+                for (var i = 0; i < outputCount; i++)
                 {
                     // get the next item
-                    OutputExchangeItem item = GetOutputExchangeItem(i);
+                    var item = GetOutputExchangeItem(i);
 
                     // extract the values from the adapter
-                    double[] data = _adapter.GetValues(item);
+                    var data = _adapter.GetValues(item);
 
                     _logFile.Append("Adapter.GetValues [" + item.Quantity.ID + "]:", data, true);
 
                     // store the values
-                    this.SetValues(item.Quantity.ID, item.ElementSet.ID, new ScalarSet(data));
+                    SetValues(item.Quantity.ID, item.ElementSet.ID, new ScalarSet(data));
                 }
             }
-           
-            // advance the component clock
-            this.AdvanceTime();
 
-            currentDT = Oatc.OpenMI.Sdk.DevelopmentSupport.CalendarConverter.ModifiedJulian2Gregorian(((TimeStamp)this.GetCurrentTime()).ModifiedJulianDay);
-            _logFile.Append("Time: " + currentDT);
+            // advance the component clock
+            AdvanceTime();
+
+            currentDt = CalendarConverter.ModifiedJulian2Gregorian(((TimeStamp)GetCurrentTime()).ModifiedJulianDay);
+            _logFile.Append("Time: " + currentDt);
 
             // IMPORTANT: the values in the data table must reflect the
             // quantities at the time that we just advanced to
@@ -193,7 +201,7 @@ namespace KansasState.Ssw.SimpleScriptWrapper
 
 
         /// <summary>
-        /// This method is used to perform actions after model simulation has ended
+        ///     This method is used to perform actions after model simulation has ended
         /// </summary>
         public override void Finish()
         {
