@@ -25,7 +25,11 @@ using System;
 namespace KansasState.Ssw.ScilabCore
 {
     /// <summary>
-    ///     This class is based on the code sample included with Scilab.
+    ///     This class is based on the code sample included with Scilab. The SCI and
+    ///     LD_LIBRARY_PATH environment variables must be set, for example:
+    ///     export SCI=/opt/beocat/scilab/scilab-5.4.0/share/scilab
+    ///     export
+    ///     LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/beocat/scilab/scilab-5.4.0/lib/scilab:/opt/beocat/scilab/scilab-5.4.0/lib/thirdparty
     /// </summary>
     public class ScilabUnix : IScilab
     {
