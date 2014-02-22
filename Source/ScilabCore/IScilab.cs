@@ -26,7 +26,6 @@ namespace KansasState.Ssw.ScilabCore
     {
         int SendScilabJob(string command);
         int CreateNamedMatrixOfDouble(string matrixName, int iRows, int iCols, double[] matrixDouble);
-        int CreateNamedMatrixOfString(string matrixName, int iRows, int iCols, string[] matrixString);
         double[] ReadNamedMatrixOfDouble(string matrixName);
         void StopScilab();
     }

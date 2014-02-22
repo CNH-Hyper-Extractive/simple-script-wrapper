@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleModelWrapper", "SimpleModelWrapper\SimpleModelWrapper.csproj", "{96C23728-CA20-47F8-A85C-AE76A31085FB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdapterApp", "AdapterApp\AdapterApp.csproj", "{4084D415-0CCA-4836-BDE1-0376767659D5}"

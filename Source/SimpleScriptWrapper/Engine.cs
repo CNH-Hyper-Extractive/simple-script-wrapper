@@ -119,7 +119,7 @@ namespace KansasState.Ssw.SimpleScriptWrapper
                     // extract the values from the adapter
                     var data = _adapter.GetValues(item);
 
-                    _logFile.Append("Adapter.GetValues [" + item.Quantity.ID + "]:", data, true);
+                    _logFile.Append("Adapter.GetValues [" + item.Quantity.ID + "]:", data);
 
                     // store the values
                     SetValues(item.Quantity.ID, item.ElementSet.ID, new ScalarSet(data));
@@ -155,7 +155,7 @@ namespace KansasState.Ssw.SimpleScriptWrapper
                     var values = (ScalarSet)GetValues(item.Quantity.ID, item.ElementSet.ID);
                     var data = values.data;
 
-                    _logFile.Append("Adapter.SetValues [" + item.Quantity.ID + "]:", data, true);
+                    _logFile.Append("Adapter.SetValues [" + item.Quantity.ID + "]:", data);
 
                     // give the values to the interpreter adapter
                     _adapter.SetValues(item, data);
@@ -180,7 +180,7 @@ namespace KansasState.Ssw.SimpleScriptWrapper
                     // extract the values from the adapter
                     var data = _adapter.GetValues(item);
 
-                    _logFile.Append("Adapter.GetValues [" + item.Quantity.ID + "]:", data, true);
+                    _logFile.Append("Adapter.GetValues [" + item.Quantity.ID + "]:", data);
 
                     // store the values
                     SetValues(item.Quantity.ID, item.ElementSet.ID, new ScalarSet(data));

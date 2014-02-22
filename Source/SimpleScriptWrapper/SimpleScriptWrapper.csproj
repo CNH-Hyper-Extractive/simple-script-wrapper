@@ -109,8 +109,8 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>COPY "$(TargetDir)*.dll" "$(SolutionDir)..\..\LinkedModel\CropChoice\Assemblies\"
-COPY "$(TargetDir)*.dll" "$(SolutionDir)..\..\LinkedModel\GroundwaterMB\Assemblies\"
+    <PostBuildEvent>COPY "$(TargetDir)*.dll" "$(SolutionDir)..\..\cnh-linked-model\CropChoice\Assemblies\"
+COPY "$(TargetDir)*.dll" "$(SolutionDir)..\..\cnh-linked-model\GroundwaterMB\Assemblies\"
 COPY "$(TargetDir)*.dll" "$(SolutionDir)..\Sample\Assemblies\"
 </PostBuildEvent>
   </PropertyGroup>

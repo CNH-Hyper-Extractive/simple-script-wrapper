@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using KansasState.Ssw.InterfaceCore;
 using Oatc.OpenMI.Sdk.Backbone;
 using OpenMI.Standard;
@@ -41,12 +42,16 @@ namespace KansasState.Ssw.ScilabCore
     /// </summary>
     public class ScilabAdapter : ILanguageAdapter
     {
+        private static readonly Random Random = new Random((int)DateTime.Now.Ticks);
         private readonly string _binPath;
+        private readonly string _prefix = RandomPrefix();
         private readonly string _scriptPath;
         private IScilab _scilab;
 
         public ScilabAdapter(String scriptPath, String installationFolder)
         {
+            Console.WriteLine("Using prefix: " + _prefix);
+
             // check the path specified in the config file (if there was one)
             _binPath = CheckPathForInstallation(installationFolder);
 
@@ -74,6 +79,8 @@ namespace KansasState.Ssw.ScilabCore
                 throw new Exception("Unable to find Scilab installation folder");
             }
 
+            Console.WriteLine("Using Scilab at " + _binPath);
+
             // make sure we use an absolute path
             _scriptPath = Path.GetFullPath(scriptPath);
         }
@@ -95,14 +102,14 @@ namespace KansasState.Ssw.ScilabCore
             }
 
             // declare globals to hold the time variables
-            _scilab.SendScilabJob("global sswStartTime;");
-            _scilab.SendScilabJob("global sswTimeStep;");
-            _scilab.SendScilabJob("global sswCurrentTime;");
+            _scilab.SendScilabJob("global " + _prefix + "sswStartTime;");
+            _scilab.SendScilabJob("global " + _prefix + "sswTimeStep;");
+            _scilab.SendScilabJob("global " + _prefix + "sswCurrentTime;");
 
             // set the values of the time variables
-            _scilab.SendScilabJob(GetSetTimeCommand("sswStartTime", startTime));
-            _scilab.SendScilabJob(GetSetTimeCommand("sswCurrentTime", startTime));
-            _scilab.SendScilabJob("sswTimeStep = " + timeStepInSeconds + ";");
+            _scilab.SendScilabJob(GetSetTimeCommand(_prefix + "sswStartTime", startTime));
+            _scilab.SendScilabJob(GetSetTimeCommand(_prefix + "sswCurrentTime", startTime));
+            _scilab.SendScilabJob(_prefix + "sswTimeStep = " + timeStepInSeconds + ";");
 
             // declare the globals for the inputs
             foreach (IExchangeItem item in inputs)
@@ -135,14 +142,15 @@ namespace KansasState.Ssw.ScilabCore
             }
 
             _scilab.SendScilabJob(@"exec('" + autoFilename + "')");
-
             File.Delete(autoFilename);
 
-            _scilab.SendScilabJob(@"exec('" + _scriptPath + "sswInitialize.sce')");
-            _scilab.SendScilabJob(@"exec('" + _scriptPath + "sswPerformTimeStep.sce')");
-            _scilab.SendScilabJob(@"exec('" + _scriptPath + "sswFinish.sce')");
+            //Console.ReadKey();
 
-            _scilab.SendScilabJob("sswInitialize();");
+            SendScilabScriptWithPrefix("sswInitialize.sce");
+            SendScilabScriptWithPrefix("sswPerformTimeStep.sce");
+            SendScilabScriptWithPrefix("sswFinish.sce");
+
+            _scilab.SendScilabJob(_prefix + "sswInitialize();");
         }
 
         public void SetValues(InputExchangeItem input, double[] values)
@@ -158,14 +166,55 @@ namespace KansasState.Ssw.ScilabCore
 
         public void PerformTimeStep(DateTime currentTime)
         {
-            _scilab.SendScilabJob(GetSetTimeCommand("sswCurrentTime", currentTime));
-            _scilab.SendScilabJob("sswPerformTimeStep();");
+            _scilab.SendScilabJob(GetSetTimeCommand(_prefix + "sswCurrentTime", currentTime));
+            _scilab.SendScilabJob(_prefix + "sswPerformTimeStep();");
         }
 
         public void Stop()
         {
-            _scilab.SendScilabJob("sswFinish();");
-            _scilab.StopScilab();
+            _scilab.SendScilabJob(_prefix + "sswFinish();");
+
+            // don't stop the scilab interpreter, since we don't know if there are
+            // multiple components using it that sswFinish hasn't been called on yet
+            //_scilab.StopScilab();
+        }
+
+        private void SendScilabScriptWithPrefix(string scriptFilename)
+        {
+            var s = ReadScriptFile(scriptFilename);
+            s = s.Replace("sswInitialize", _prefix + "sswInitialize");
+            s = s.Replace("sswPerformTimeStep", _prefix + "sswPerformTimeStep");
+            s = s.Replace("sswFinish", _prefix + "sswFinish");
+            s = s.Replace("sswGetStartTime", _prefix + "sswGetStartTime");
+            s = s.Replace("sswGetTimeStep", _prefix + "sswGetTimeStep");
+            s = s.Replace("sswGetCurrentTime", _prefix + "sswGetCurrentTime");
+            s = s.Replace("sswGetScriptFolder", _prefix + "sswGetScriptFolder");
+
+            s = s.Replace("sswGetInput", _prefix + "sswGetInput");
+            s = s.Replace("sswSetInput", _prefix + "sswSetInput");
+            s = s.Replace("sswGetOutput", _prefix + "sswGetOutput");
+            s = s.Replace("sswSetOutput", _prefix + "sswSetOutput");
+
+
+            var tempFilename = Path.GetRandomFileName();
+            var writer = File.CreateText(tempFilename);
+            writer.Write(s);
+            writer.Close();
+            _scilab.SendScilabJob(@"exec('" + _scriptPath + tempFilename + "')");
+            File.Delete(tempFilename);
+        }
+
+        private static string RandomPrefix()
+        {
+            var builder = new StringBuilder();
+            char ch;
+            for (var i = 0; i < 2; i++)
+            {
+                ch = (char)Random.Next('A', 'Z' + 1);
+                builder.Append(ch);
+            }
+
+            return builder.ToString();
         }
 
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -247,7 +296,7 @@ namespace KansasState.Ssw.ScilabCore
 
         private void GenerateFolderAccessor(TextWriter writer)
         {
-            writer.WriteLine(@"function[path] = sswGetScriptFolder()");
+            writer.WriteLine(@"function[path] = " + _prefix + "sswGetScriptFolder()");
             writer.WriteLine(@"  path = '" + _scriptPath.Replace(@"\", @"\\") + "';");
             writer.WriteLine(@"endfunction");
         }
@@ -257,14 +306,14 @@ namespace KansasState.Ssw.ScilabCore
             var autoFilename = Path.GetRandomFileName();
             var writer = File.CreateText(autoFilename);
 
-            GenerateArrayAccessors(writer, "sswGetInput", inputs.ToArray(), "Get");
-            GenerateArrayAccessors(writer, "sswSetInput", inputs.ToArray(), "Set");
-            GenerateArrayAccessors(writer, "sswGetOutput", outputs.ToArray(), "Get");
-            GenerateArrayAccessors(writer, "sswSetOutput", outputs.ToArray(), "Set");
+            GenerateArrayAccessors(writer, _prefix + "sswGetInput", inputs.ToArray(), "Get");
+            GenerateArrayAccessors(writer, _prefix + "sswSetInput", inputs.ToArray(), "Set");
+            GenerateArrayAccessors(writer, _prefix + "sswGetOutput", outputs.ToArray(), "Get");
+            GenerateArrayAccessors(writer, _prefix + "sswSetOutput", outputs.ToArray(), "Set");
 
-            GenerateTimeAccessor(writer, "sswGetStartTime", "sswStartTime");
-            GenerateTimeAccessor(writer, "sswGetTimeStep", "sswTimeStep");
-            GenerateTimeAccessor(writer, "sswGetCurrentTime", "sswCurrentTime");
+            GenerateTimeAccessor(writer, _prefix + "sswGetStartTime", _prefix + "sswStartTime");
+            GenerateTimeAccessor(writer, _prefix + "sswGetTimeStep", _prefix + "sswTimeStep");
+            GenerateTimeAccessor(writer, _prefix + "sswGetCurrentTime", _prefix + "sswCurrentTime");
 
             GenerateFolderAccessor(writer);
 
@@ -273,7 +322,7 @@ namespace KansasState.Ssw.ScilabCore
             return autoFilename;
         }
 
-        private static String GetIdArrayName(IExchangeItem item)
+        private String GetIdArrayName(IExchangeItem item)
         {
             // figure out the prefix
             var prefix = "";
@@ -282,10 +331,10 @@ namespace KansasState.Ssw.ScilabCore
             if (item is OutputExchangeItem)
                 prefix = "OT";
 
-            return prefix + "ID" + item.Quantity.ID.Replace(" ", "").ToUpper();
+            return _prefix + prefix + "ID" + item.Quantity.ID.Replace(" ", "").ToUpper();
         }
 
-        private static String GetValueArrayName(IExchangeItem item)
+        private String GetValueArrayName(IExchangeItem item)
         {
             // figure out the prefix
             var prefix = "";
@@ -294,7 +343,7 @@ namespace KansasState.Ssw.ScilabCore
             if (item is OutputExchangeItem)
                 prefix = "OT";
 
-            return prefix + "VL" + item.Quantity.ID.Replace(" ", "").ToUpper();
+            return _prefix + prefix + "VL" + item.Quantity.ID.Replace(" ", "").ToUpper();
         }
 
         private void SetIdArray(IExchangeItem item)
@@ -302,10 +351,23 @@ namespace KansasState.Ssw.ScilabCore
             // build the 1d array to hold the id's
             var ids = new String[item.ElementSet.ElementCount];
             for (var i = 0; i < item.ElementSet.ElementCount; i++)
+            {
                 ids[i] = item.ElementSet.GetElementID(i);
+            }
 
-            // set the arrays
-            _scilab.CreateNamedMatrixOfString(GetIdArrayName(item), 1, ids.Length, ids);
+            var s = new StringBuilder();
+            s.Append(GetIdArrayName(item));
+            s.Append("=[");
+            for (var i = 0; i < ids.Length; i++)
+            {
+                if (i > 0)
+                {
+                    s.Append(",");
+                }
+                s.Append("'" + ids[i] + "'");
+            }
+            s.Append("]");
+            _scilab.SendScilabJob(s.ToString());
         }
 
         private void InitializeValuesArray(IExchangeItem item)
@@ -323,7 +385,7 @@ namespace KansasState.Ssw.ScilabCore
             var v = _scilab.ReadNamedMatrixOfDouble(GetValueArrayName(item));
             if (v == null)
             {
-                throw new Exception("Initializationi failed for " + item.Quantity.ID);
+                throw new Exception("Initialization failed for " + item.Quantity.ID);
             }
 
             Console.WriteLine(v);

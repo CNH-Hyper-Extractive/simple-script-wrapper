@@ -50,14 +50,6 @@ namespace KansasState.Ssw.ScilabCore
             return sciErr.iErr;
         }
 
-        public int CreateNamedMatrixOfString(string matrixName, int iRows, int iCols, string[] matrixString)
-        {
-            Console.WriteLine("CreateNamedMatrixOfString"); // need console out for unix to work?
-            var ptrEmpty = new IntPtr();
-            var sciErr = ScilabUnixInterop.createNamedMatrixOfString(ptrEmpty, matrixName, iRows, iCols, matrixString);
-            return sciErr.iErr;
-        }
-
         public unsafe double[] ReadNamedMatrixOfDouble(string matrixName)
         {
             var iRows = 0;

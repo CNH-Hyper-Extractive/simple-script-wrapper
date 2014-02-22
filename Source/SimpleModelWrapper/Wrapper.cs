@@ -1,140 +1,152 @@
-//
-// This is a derivative work of the Simple Model Wrapper library (MIT license)
-// available at http://code.google.com/p/smw/
-//
+//  -----------------------------------------------------------------------
+//   Copyright (c) 2014 Tom Bulatewicz, Kansas State University
+//   
+//   Permission is hereby granted, free of charge, to any person obtaining a copy
+//   of this software and associated documentation files (the "Software"), to deal
+//   in the Software without restriction, including without limitation the rights
+//   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//   copies of the Software, and to permit persons to whom the Software is
+//   furnished to do so, subject to the following conditions:
+//   
+//   The above copyright notice and this permission notice shall be included in all
+//   copies or substantial portions of the Software.
+//   
+//   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//   SOFTWARE.
+//  -----------------------------------------------------------------------
+
 using System;
-using System.Collections.Generic;
 using System.Collections;
-using System.Text;
-using System.IO;
-using System.Xml;
-using System.Xml.Serialization;
-using System.Reflection;
+using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
-using OpenMI.Standard;
+using System.Xml;
 using Oatc.OpenMI.Sdk.Backbone;
 using Oatc.OpenMI.Sdk.DevelopmentSupport;
 using Oatc.OpenMI.Sdk.Wrapper;
-using System.Data;
-using SharpMap.Data;
-using SharpMap.Data.Providers;
-using SharpMap.Layers;
-using SharpMap.Geometries;
+using OpenMI.Standard;
+using TimeSpan = Oatc.OpenMI.Sdk.Backbone.TimeSpan;
+using ValueType = OpenMI.Standard.ValueType;
 
-
-//Notes
-//Compiling with the "Release" option places the .dll into C:\Code\Dev.CSharp\OpenMI_Test\branches\Tony 01\Utilities\SDK
-// so that all other projects are including the most recent version.  It might be better for all projects to reference
-// the trunk version instead, to guarantee they are always using the most up-to-date version.
 namespace Sc.Smw
 {
-    public abstract class Wrapper : Oatc.OpenMI.Sdk.Wrapper.IEngine
+    //
+    // This is a derivative work of the Simple Model Wrapper library (MIT license)
+    // available at http://code.google.com/p/smw/
+    //
+    public abstract class Wrapper : IEngine
     {
         private const int SECONDS_IN_DAY = 86400;
 
+        private const int STEP_UNIT_SECOND = 1;
+        private const int STEP_UNIT_DAY = 2;
+        private const int STEP_UNIT_YEAR = 3;
+
+        #region Global Objects
+
+        private readonly Dictionary<string, ElementSet> _elementSets = new Dictionary<string, ElementSet>();
+        private readonly Dictionary<string, Quantity> _quantities = new Dictionary<string, Quantity>();
+        private readonly DataTable _values = new DataTable();
+        protected string _adapterName;
+        private string _componentDescription = "Interpreter Model Component";
+        private string _componentID = "Interpreter_Model_Component";
+        private double _currentTime; // in julian days
+        private List<InputExchangeItem> _inputs = new List<InputExchangeItem>();
+        protected LogFile _logFile;
+        private string _modelDescription;
+        private string _modelID;
+        private Unit _omiUnits;
+        private List<OutputExchangeItem> _outputs = new List<OutputExchangeItem>();
+        private string _shapefilepath;
+        private double _simulationEndTime;
+        private double _simulationStartTime;
+        private int _stepInputOffset;
+        //private double _timeStepLength;     // in days
+        //private double _inputTimeOffset;    // + or - days from current time at which to get the inputs
+        private int _stepLength; // number of steps of the appropriate unit
+        private int _stepUnit; // time step units
+        private string _xmlFilePath;
+
+        #endregion
+
+        #region Abstract Methods
+
+        /// <summary>
+        ///     Used to Initialize the component.  Performs routines that must be completed prior to simulation start.
+        /// </summary>
+        /// <param name="properties">properties extracted from the components *.omi file</param>
+        public abstract void Initialize(Hashtable properties);
+
+        public abstract bool PerformTimeStep();
+        public abstract void Finish();
+
+        #endregion
+
         protected List<InputExchangeItem> Inputs
         {
-            get
-            {
-                return _inputs;
-            }
-            set
-            {
-                _inputs = value;
-            }
+            get { return _inputs; }
+            set { _inputs = value; }
         }
 
         protected List<OutputExchangeItem> Outputs
         {
-            get
-            {
-                return _outputs;
-            }
-            set
-            {
-                _outputs = value;
-            }
+            get { return _outputs; }
+            set { _outputs = value; }
         }
-
-        const int STEP_UNIT_SECOND = 1;
-        const int STEP_UNIT_DAY = 2;
-        const int STEP_UNIT_YEAR = 3;
-
-        #region Global Objects
-        private string _componentID = "Interpreter_Model_Component";
-        private string _componentDescription = "Interpreter Model Component";
-        private string _modelID;
-        private string _modelDescription;
-        private List<InputExchangeItem> _inputs = new List<InputExchangeItem>();
-        private List<OutputExchangeItem> _outputs = new List<OutputExchangeItem>();
-        private double _simulationStartTime;
-        private double _simulationEndTime;
-        private double _currentTime;        // in julian days
-        //private double _timeStepLength;     // in days
-        //private double _inputTimeOffset;    // + or - days from current time at which to get the inputs
-        private int _stepLength;    // number of steps of the appropriate unit
-        private int _stepUnit;      // time step units
-        private int _stepInputOffset;
-        private string _shapefilepath;
-        private string _xmlFilePath;
-        private Dictionary<string, Quantity> _quantities = new Dictionary<string, Quantity>();
-        private Dictionary<string, ElementSet> _elementSets = new Dictionary<string, ElementSet>();
-        private DataTable _values = new DataTable();
-        Unit _omiUnits;
-        protected string _adapterName;
-        protected LogFile _logFile;
-        #endregion
-
-        #region Abstract Methods
-        /// <summary>
-        /// Used to Initialize the component.  Performs routines that must be completed prior to simulation start.
-        /// </summary>
-        /// <param name="properties">properties extracted from the components *.omi file</param>
-        public abstract void Initialize(System.Collections.Hashtable properties);
-        public abstract bool PerformTimeStep();
-        public abstract void Finish();
-        #endregion
 
         public string GetComponentID()
         {
             return _componentID;
         }
+
         public string GetComponentDescription()
         {
             return _modelDescription;
         }
+
         public string GetModelID()
         {
             return _modelID;
         }
+
         public string GetModelDescription()
         {
             return _modelDescription;
         }
+
         public InputExchangeItem GetInputExchangeItem(int exchangeItemIndex)
         {
             return _inputs[exchangeItemIndex];
         }
+
         public OutputExchangeItem GetOutputExchangeItem(int exchangeItemIndex)
         {
             return _outputs[exchangeItemIndex];
         }
+
         public int GetInputExchangeItemCount()
         {
             if (_inputs == null) return 0;
-            else return _inputs.Count;
+            return _inputs.Count;
         }
+
         public int GetOutputExchangeItemCount()
         {
             if (_outputs == null) return 0;
-            else return _outputs.Count;
+            return _outputs.Count;
         }
+
         public ITimeSpan GetTimeHorizon()
         {
-            return new Oatc.OpenMI.Sdk.Backbone.TimeSpan(
+            return new TimeSpan(
                 new TimeStamp(_simulationStartTime), new TimeStamp(_simulationEndTime));
         }
-        
+
         public void Dispose()
         {
         }
@@ -152,7 +164,7 @@ namespace Sc.Smw
         }
 
         /// <summary>
-        /// Returns the time at which the the inputs from other components is needed.
+        ///     Returns the time at which the the inputs from other components is needed.
         /// </summary>
         public ITime GetInputTime(string QuantityID, string ElementSetID)
         {
@@ -160,25 +172,25 @@ namespace Sc.Smw
             //return new TimeStamp(_currentTime + (_timeStep / 86400)); // alternate one where providing models run their time steps before this one
 
             // use the GetCurrentTime() method so that it gets initialized if necessary
-            TimeStamp ct = (TimeStamp)GetCurrentTime();
+            var ct = (TimeStamp)GetCurrentTime();
 
             // add the input time offset to the current time
             //double inputTime = ct.ModifiedJulianDay + _inputTimeOffset;
 
-            DateTime dt = CalendarConverter.ModifiedJulian2Gregorian(ct.ModifiedJulianDay);
+            var dt = CalendarConverter.ModifiedJulian2Gregorian(ct.ModifiedJulianDay);
             switch (_stepUnit)
             {
                 case STEP_UNIT_SECOND:
-                    dt = dt.AddSeconds(_stepInputOffset * _stepLength);
+                    dt = dt.AddSeconds(_stepInputOffset*_stepLength);
                     break;
                 case STEP_UNIT_DAY:
-                    dt = dt.AddDays(_stepInputOffset * _stepLength);
+                    dt = dt.AddDays(_stepInputOffset*_stepLength);
                     break;
                 case STEP_UNIT_YEAR:
-                    dt = dt.AddYears(_stepInputOffset * _stepLength);
+                    dt = dt.AddYears(_stepInputOffset*_stepLength);
                     break;
             }
-            double inputTime = CalendarConverter.Gregorian2ModifiedJulian(dt);
+            var inputTime = CalendarConverter.Gregorian2ModifiedJulian(dt);
 
             // log it
             _logFile.Append("InputTime:" + CalendarConverter.ModifiedJulian2Gregorian(inputTime) + " (current:" + CalendarConverter.ModifiedJulian2Gregorian(_currentTime) + ")");
@@ -193,23 +205,20 @@ namespace Sc.Smw
         }
 
         /// <summary>
-        /// This method is used to extract values from an upstream component.
+        ///     This method is used to extract values from an upstream component.
         /// </summary>
         /// <param name="QuantityID">The input Quantity ID</param>
         /// <param name="ElementSetID">The input Element Set ID</param>
         /// <returns>the values saved under the matching QuantityID and ElementSetID, from an upstream component</returns>
         public IValueSet GetValues(string QuantityID, string ElementSetID)
         {
-            DataRow[] rows = _values.Select("QuantityID = '" + QuantityID + "' AND ElementSetID = '" + ElementSetID + "'");
+            var rows = _values.Select("QuantityID = '" + QuantityID + "' AND ElementSetID = '" + ElementSetID + "'");
             if (rows.Length == 1)
                 return (IValueSet)rows[0].ItemArray[2];
-            else
-            {
-                ElementSet es = _elementSets[ElementSetID];
-                ScalarSet ss = new ScalarSet();
-                ss.data = new double[es.ElementCount];
-                return (IValueSet)ss;
-            }
+            var es = _elementSets[ElementSetID];
+            var ss = new ScalarSet();
+            ss.data = new double[es.ElementCount];
+            return ss;
         }
 
         public void SetValues(string QuantityID, string ElementSetID, IValueSet values)
@@ -220,25 +229,24 @@ namespace Sc.Smw
             // getvlaues to accept a parameter to get an aggregated set of values
 
             // -- check to see if QuantityID and ElementSetID already exits in Values.  If so, delete that row before adding.
-            DataRow[] rows = _values.Select("QuantityID = '" + QuantityID + "' AND ElementSetID = '" + ElementSetID + "'");
+            var rows = _values.Select("QuantityID = '" + QuantityID + "' AND ElementSetID = '" + ElementSetID + "'");
 
             if (rows.Length == 1)
             {
                 _values.Rows.Remove(rows[0]);
             }
             _values.BeginLoadData();
-            DataRow dr = _values.LoadDataRow(new object[] { QuantityID, ElementSetID, values }, true);
+            var dr = _values.LoadDataRow(new object[] {QuantityID, ElementSetID, values}, true);
             _values.EndLoadData();
-
         }
 
         #region Auxilary Methods
 
         /// <summary>
-        /// This method will advance the components in time, by a single timestep.  
+        ///     This method will advance the components in time, by a single timestep.
         /// </summary>
         /// <remarks>
-        /// This should be called at the end of Perform Time Step.
+        ///     This should be called at the end of Perform Time Step.
         /// </remarks>
         public void AdvanceTime()
         {
@@ -246,10 +254,10 @@ namespace Sc.Smw
             //_currentTime = ct.ModifiedJulianDay + _timeStep / 86400;
 
             // use the GetCurrentTime() method so that it gets initialized if necessary
-            TimeStamp ct = (TimeStamp)GetCurrentTime();
+            var ct = (TimeStamp)GetCurrentTime();
             //_currentTime = ct.ModifiedJulianDay + _timeStepLength;
 
-            DateTime dt = CalendarConverter.ModifiedJulian2Gregorian(ct.ModifiedJulianDay);
+            var dt = CalendarConverter.ModifiedJulian2Gregorian(ct.ModifiedJulianDay);
             switch (_stepUnit)
             {
                 case STEP_UNIT_SECOND:
@@ -266,48 +274,48 @@ namespace Sc.Smw
         }
 
         /// <summary>
-        /// Reads the Configuration file, and creates OpenMI exchange items 
+        ///     Reads the Configuration file, and creates OpenMI exchange items
         /// </summary>
         /// <param name="configFile">path pointing to the components comfiguration (XML) file</param>
         public void SetVariablesFromConfigFile(string configFile)
         {
             //Read config file
-            XmlDocument doc = new XmlDocument();
+            var doc = new XmlDocument();
             doc.Load(configFile);
 
-            XmlElement root = doc.DocumentElement;
+            var root = doc.DocumentElement;
 
-            XmlNode ID = root.SelectSingleNode("ModelInfo//ID");
+            var ID = root.SelectSingleNode("ModelInfo//ID");
             _modelID = ID.InnerText;
 
-            XmlNode Desc = root.SelectSingleNode("ModelInfo//Description");
-            if(Desc != null)
+            var Desc = root.SelectSingleNode("ModelInfo//Description");
+            if (Desc != null)
                 _componentDescription = Desc.InnerText;
 
-            XmlNode AdapterName = root.SelectSingleNode("ModelInfo//ScriptingLanguage");
-            if(AdapterName != null)
+            var AdapterName = root.SelectSingleNode("ModelInfo//ScriptingLanguage");
+            if (AdapterName != null)
                 _adapterName = AdapterName.InnerText;
 
-            XmlNodeList outputExchangeItems = root.SelectNodes("//OutputExchangeItem");
+            var outputExchangeItems = root.SelectNodes("//OutputExchangeItem");
             foreach (XmlNode outputExchangeItem in outputExchangeItems)
             {
                 CreateExchangeItemsFromXMLNode(outputExchangeItem, "OutputExchangeItem");
             }
 
-            XmlNodeList inputExchangeItems = root.SelectNodes("//InputExchangeItem");
+            var inputExchangeItems = root.SelectNodes("//InputExchangeItem");
             foreach (XmlNode inputExchangeItem in inputExchangeItems)
             {
                 CreateExchangeItemsFromXMLNode(inputExchangeItem, "InputExchangeItem");
             }
 
-            XmlNode timeHorizon = root.SelectSingleNode("//TimeHorizon");
+            var timeHorizon = root.SelectSingleNode("//TimeHorizon");
 
             //Set IEngine properties
-            this._simulationStartTime = CalendarConverter.Gregorian2ModifiedJulian(Convert.ToDateTime(timeHorizon["StartDateTime"].InnerText));
-            this._simulationEndTime = CalendarConverter.Gregorian2ModifiedJulian(Convert.ToDateTime(timeHorizon["EndDateTime"].InnerText));
+            _simulationStartTime = CalendarConverter.Gregorian2ModifiedJulian(Convert.ToDateTime(timeHorizon["StartDateTime"].InnerText));
+            _simulationEndTime = CalendarConverter.Gregorian2ModifiedJulian(Convert.ToDateTime(timeHorizon["EndDateTime"].InnerText));
 
             // get the units
-            string timeStepUnit = timeHorizon["TimeStepUnit"].InnerText;
+            var timeStepUnit = timeHorizon["TimeStepUnit"].InnerText;
             switch (timeStepUnit)
             {
                 case "second":
@@ -331,8 +339,8 @@ namespace Sc.Smw
         private void CreateExchangeItemsFromXMLNode(XmlNode ExchangeItem, string Identifier)
         {
             //Create Dimensions
-            Dimension omiDimensions = new Dimension();
-            XmlNodeList dimensions = ExchangeItem.SelectNodes("//Dimensions/Dimension"); // You can filter elements here using XPath
+            var omiDimensions = new Dimension();
+            var dimensions = ExchangeItem.SelectNodes("//Dimensions/Dimension"); // You can filter elements here using XPath
             if (dimensions != null)
             {
                 foreach (XmlNode dimension in dimensions)
@@ -374,7 +382,7 @@ namespace Sc.Smw
 
             //Create Units
             _omiUnits = new Unit();
-            XmlNode units = ExchangeItem.SelectSingleNode("Quantity/Unit");
+            var units = ExchangeItem.SelectSingleNode("Quantity/Unit");
             if (units != null)
             {
                 _omiUnits.ID = units["ID"].InnerText;
@@ -384,38 +392,37 @@ namespace Sc.Smw
             }
 
             //Create Quantity
-            Quantity omiQuantity = new Quantity();
-            XmlNode quantity = ExchangeItem.SelectSingleNode("Quantity");
+            var omiQuantity = new Quantity();
+            var quantity = ExchangeItem.SelectSingleNode("Quantity");
             omiQuantity.ID = quantity["ID"].InnerText;
             if (quantity["Description"] != null) omiQuantity.Description = quantity["Description"].InnerText;
             omiQuantity.Dimension = omiDimensions;
             omiQuantity.Unit = _omiUnits;
-            omiQuantity.ValueType = OpenMI.Standard.ValueType.Scalar;
+            omiQuantity.ValueType = ValueType.Scalar;
             if (quantity["ValueType"] != null)
             {
                 if (quantity["ValueType"].InnerText == "Scalar")
                 {
-                    omiQuantity.ValueType = OpenMI.Standard.ValueType.Scalar;
+                    omiQuantity.ValueType = ValueType.Scalar;
                 }
                 else if (quantity["ValueType"].InnerText == "Vector")
                 {
-                    omiQuantity.ValueType = OpenMI.Standard.ValueType.Vector;
+                    omiQuantity.ValueType = ValueType.Vector;
                 }
             }
 
             //Create Element Set
-            ElementSet omiElementSet = new ElementSet();
-            XmlNode elementSet = ExchangeItem.SelectSingleNode("ElementSet");
+            var omiElementSet = new ElementSet();
+            var elementSet = ExchangeItem.SelectSingleNode("ElementSet");
             omiElementSet.ID = elementSet["ID"].InnerText;
             if (elementSet["Description"] != null) omiElementSet.Description = elementSet["Description"].InnerText;
 
             try
             {
                 //add elements from shapefile to element set
-                Utilities utils = new Utilities();
+                var utils = new Utilities();
                 _shapefilepath = elementSet["ShapefilePath"].InnerText;
                 omiElementSet = utils.AddElementsFromShapefile(omiElementSet, _shapefilepath);
-
             }
             catch (Exception)
             {
@@ -425,7 +432,7 @@ namespace Sc.Smw
             try
             {
                 // add elements from xml file to element set
-                Utilities utils = new Utilities();
+                var utils = new Utilities();
                 _xmlFilePath = elementSet["XmlFilePath"].InnerText;
                 omiElementSet = utils.AddElementsFromXmlFile(omiElementSet, _xmlFilePath);
             }
@@ -435,81 +442,78 @@ namespace Sc.Smw
             }
 
 
-
             if (Identifier == "OutputExchangeItem")
             {
                 //create exchange item
-                OutputExchangeItem omiOutputExchangeItem = new OutputExchangeItem();
+                var omiOutputExchangeItem = new OutputExchangeItem();
                 omiOutputExchangeItem.Quantity = omiQuantity;
                 omiOutputExchangeItem.ElementSet = omiElementSet;
 
                 //add the output exchange item to the list of output exchange items for the component
-                this._outputs.Add(omiOutputExchangeItem);
-                if (!this._quantities.ContainsKey(omiQuantity.ID)) this._quantities.Add(omiQuantity.ID, omiQuantity);
-                if (!this._elementSets.ContainsKey(omiElementSet.ID)) this._elementSets.Add(omiElementSet.ID, omiElementSet);
+                _outputs.Add(omiOutputExchangeItem);
+                if (!_quantities.ContainsKey(omiQuantity.ID)) _quantities.Add(omiQuantity.ID, omiQuantity);
+                if (!_elementSets.ContainsKey(omiElementSet.ID)) _elementSets.Add(omiElementSet.ID, omiElementSet);
             }
             else if (Identifier == "InputExchangeItem")
             {
                 //create exchange item
-                InputExchangeItem omiInputExchangeItem = new InputExchangeItem();
+                var omiInputExchangeItem = new InputExchangeItem();
                 omiInputExchangeItem.Quantity = omiQuantity;
                 omiInputExchangeItem.ElementSet = omiElementSet;
 
 
                 //add the output exchange item to the list of output exchange items for the component
-                this._inputs.Add(omiInputExchangeItem);
-                if (!this._quantities.ContainsKey(omiQuantity.ID)) this._quantities.Add(omiQuantity.ID, omiQuantity);
-                if (!this._elementSets.ContainsKey(omiElementSet.ID)) this._elementSets.Add(omiElementSet.ID, omiElementSet);
+                _inputs.Add(omiInputExchangeItem);
+                if (!_quantities.ContainsKey(omiQuantity.ID)) _quantities.Add(omiQuantity.ID, omiQuantity);
+                if (!_elementSets.ContainsKey(omiElementSet.ID)) _elementSets.Add(omiElementSet.ID, omiElementSet);
             }
         }
 
         /// <summary>
-        /// Adds columns to hold the components input and output the SMW's global data structure to 
+        ///     Adds columns to hold the components input and output the SMW's global data structure to
         /// </summary>
         public void SetValuesTableFields()
         {
-            _values.Columns.Add("QuantityID", typeof(string));
-            _values.Columns.Add("ElementSetID", typeof(string));
-            _values.Columns.Add("ValueSet", typeof(IValueSet));
-
+            _values.Columns.Add("QuantityID", typeof (string));
+            _values.Columns.Add("ElementSetID", typeof (string));
+            _values.Columns.Add("ValueSet", typeof (IValueSet));
         }
 
         #endregion
 
-
         /// <summary>
-        /// Returns the model's constant time step length in whatever the units are.
+        ///     Returns the model's constant time step length in whatever the units are.
         /// </summary>
         public double GetTimeStepLength()
         {
             return _stepLength;
         }
+
         /// <summary>
-        /// Use to get the shapefile path stored in config.xml
+        ///     Use to get the shapefile path stored in config.xml
         /// </summary>
         /// <returns>the absolute path to the elementset shapefile</returns>
         public string GetShapefilePath()
         {
             return _shapefilepath;
         }
+
         /// <summary>
-        /// Use to get the xml file path stored in config.xml
+        ///     Use to get the xml file path stored in config.xml
         /// </summary>
         /// <returns>the absolute path to the elementset xml file</returns>
         public string GetElementSetXmlFilePath()
         {
             return _xmlFilePath;
         }
+
         /// <summary>
-        /// Gets the unit value that the component is implemented over
+        ///     Gets the unit value that the component is implemented over
         /// </summary>
         /// <returns>unitID from config.xml</returns>
         public string GetUnits()
         {
             return _omiUnits.ID;
         }
-
-
     }
-
 }

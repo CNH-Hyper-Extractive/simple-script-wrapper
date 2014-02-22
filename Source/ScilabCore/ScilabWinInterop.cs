@@ -47,12 +47,6 @@ namespace KansasState.Ssw.ScilabCore
                 [In] double[] _pdblReal);
 
         [DllImport(API_SCILAB_DLL, CharSet = CharSet.Ansi)]
-        public static extern ApiErr createNamedMatrixOfString
-            ([In] IntPtr pvApiCtx, [In] String _pstName,
-                [In] int _iRows, [In] int _iCols,
-                [In] String[] _pstStrings);
-
-        [DllImport(API_SCILAB_DLL, CharSet = CharSet.Ansi)]
         public static extern unsafe ApiErr readNamedMatrixOfDouble
             ([In] IntPtr pvApiCtx, [In] String _pstName,
                 [Out] Int32* _piRows, [Out] Int32* _piCols,
