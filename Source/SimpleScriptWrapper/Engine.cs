@@ -57,10 +57,12 @@ namespace KansasState.Ssw.SimpleScriptWrapper
             // to make it unique)
             _logFile = new LogFile(Path.Combine(Directory.GetCurrentDirectory(), "Log.txt"));
 
+            _logFile.Append("SSW:Initialize():Begin");
+
             for (var i = 0; i < GetInputExchangeItemCount(); i++)
             {
                 var item = GetInputExchangeItem(i);
-                _logFile.Append("Input Item: " + item.Quantity.ID + " has " + item.ElementSet.ElementCount + " elements");
+                _logFile.Append("SSW:Input Item: " + item.Quantity.ID + " has " + item.ElementSet.ElementCount + " elements");
             }
 
             // get the name of the folder where the scripts are located (relative path)
@@ -76,13 +78,13 @@ namespace KansasState.Ssw.SimpleScriptWrapper
 
             // make sure the script path ends with a slash
             scriptPath = Utils.AddTrailingSeparatorIfNecessary(scriptPath);
-            _logFile.Append("ScriptPath: " + scriptPath);
+            _logFile.Append("SSW:ScriptPath: " + scriptPath);
 
             // get the name of the folder where the runtime dll's are located
             var installationFolder = (string)properties["InstallationPath"];
-            _logFile.Append("InstallationPath: " + installationFolder);
+            _logFile.Append("SSW:InstallationPath: " + installationFolder);
 
-            _logFile.Append("Creating adapter..");
+            _logFile.Append("SSW:Creating adapter..");
 
             // instantiate the appropriate interpreter adapter
             switch (_adapterName.ToLower())
@@ -119,7 +121,7 @@ namespace KansasState.Ssw.SimpleScriptWrapper
                     // extract the values from the adapter
                     var data = _adapter.GetValues(item);
 
-                    _logFile.Append("Adapter.GetValues [" + item.Quantity.ID + "]:", data);
+                    _logFile.Append("SSW:Adapter.GetValues [" + item.Quantity.ID + "]:", data);
 
                     // store the values
                     SetValues(item.Quantity.ID, item.ElementSet.ID, new ScalarSet(data));
@@ -127,17 +129,17 @@ namespace KansasState.Ssw.SimpleScriptWrapper
             }
 
             var currentDt = CalendarConverter.ModifiedJulian2Gregorian(((TimeStamp)GetCurrentTime()).ModifiedJulianDay);
-            _logFile.Append("Time: " + currentDt);
+            _logFile.Append("SSW:CurrentTime: " + currentDt);
 
-            _logFile.Append("Initialization complete");
+            _logFile.Append("SSW:Initialize():End");
         }
 
         public override bool PerformTimeStep()
         {
-            _logFile.Append("PerformTimeStep()");
+            _logFile.Append("SSW:PerformTimeStep():Begin");
 
             var currentDt = CalendarConverter.ModifiedJulian2Gregorian(((TimeStamp)GetCurrentTime()).ModifiedJulianDay);
-            _logFile.Append("Time: " + currentDt);
+            _logFile.Append("SSW:CurrentTime: " + currentDt);
 
             // get any input values from other components and pass them into
             // the interpreter adapter
@@ -155,7 +157,7 @@ namespace KansasState.Ssw.SimpleScriptWrapper
                     var values = (ScalarSet)GetValues(item.Quantity.ID, item.ElementSet.ID);
                     var data = values.data;
 
-                    _logFile.Append("Adapter.SetValues [" + item.Quantity.ID + "]:", data);
+                    _logFile.Append("SSW:Adapter.SetValues [" + item.Quantity.ID + "]:", data);
 
                     // give the values to the interpreter adapter
                     _adapter.SetValues(item, data);
@@ -164,7 +166,9 @@ namespace KansasState.Ssw.SimpleScriptWrapper
 
             // tell the interpreter adapter to perform a time step
             var currentTime = Utils.ITimeToDateTime(GetCurrentTime());
+            _logFile.Append("SSW:Adapter:PerformTimeStep():Begin");
             _adapter.PerformTimeStep(currentTime);
+            _logFile.Append("SSW:Adapter:PerformTimeStep():End");
 
             // extract the outputs from the interpreter adapter for each
             // output exchange item
@@ -180,7 +184,7 @@ namespace KansasState.Ssw.SimpleScriptWrapper
                     // extract the values from the adapter
                     var data = _adapter.GetValues(item);
 
-                    _logFile.Append("Adapter.GetValues [" + item.Quantity.ID + "]:", data);
+                    _logFile.Append("SSW:Adapter.GetValues [" + item.Quantity.ID + "]:", data);
 
                     // store the values
                     SetValues(item.Quantity.ID, item.ElementSet.ID, new ScalarSet(data));
@@ -191,10 +195,12 @@ namespace KansasState.Ssw.SimpleScriptWrapper
             AdvanceTime();
 
             currentDt = CalendarConverter.ModifiedJulian2Gregorian(((TimeStamp)GetCurrentTime()).ModifiedJulianDay);
-            _logFile.Append("Time: " + currentDt);
+            _logFile.Append("SSW:CurrentTime: " + currentDt);
 
             // IMPORTANT: the values in the data table must reflect the
             // quantities at the time that we just advanced to
+
+            _logFile.Append("SSW:PerformTimeStep():End");
 
             return true;
         }
@@ -205,9 +211,9 @@ namespace KansasState.Ssw.SimpleScriptWrapper
         /// </summary>
         public override void Finish()
         {
-            _logFile.Append("Finish()");
-
+            _logFile.Append("SSW:Finish():Begin");
             _adapter.Stop();
+            _logFile.Append("SSW:Finish():End");
         }
     }
 }
