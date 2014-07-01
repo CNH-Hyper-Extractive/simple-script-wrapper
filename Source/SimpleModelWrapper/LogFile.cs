@@ -30,19 +30,28 @@ namespace Sc.Smw
     public class LogFile
     {
         private readonly String _path;
+        private bool _isEnabled = false;
 
         public LogFile(String path)
         {
+            if (_isEnabled == false)
+            {
+                return;
+            }
+
             _path = path;
-
             File.Delete(_path);
-
             var writer = File.CreateText(_path);
             writer.Close();
         }
 
         public void Append(String s)
         {
+            if (_isEnabled == false)
+            {
+                return;
+            }
+
             Console.WriteLine(s);
             var writer = new StreamWriter(_path, true);
             writer.Write(DateTimeToString(DateTime.Now) + ":" + s + "\r\n");
@@ -80,15 +89,23 @@ namespace Sc.Smw
 
         public void AppendNoEOL(String s)
         {
+            if (_isEnabled == false)
+            {
+                return;
+            }
+
             var writer = new StreamWriter(_path, true);
-
             writer.Write(s);
-
             writer.Close();
         }
 
         public void Append(string dataName, double[] data)
         {
+            if (_isEnabled == false)
+            {
+                return;
+            }
+
             var s = new StringBuilder();
             s.Append(dataName);
             if (Utils.IsEmpty(data) == true)
